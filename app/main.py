@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import APIRouter, FastAPI, Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from .db import SessionLocal, engine, Base
 from . import crud
+from sqlalchemy.orm import Session
+from app import crud
 
 Base.metadata.create_all(bind=engine)
 
@@ -14,9 +16,17 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/t/{slug}")
+
+@app.get("/")
+def health_check():
+    return {"status": "OK"}
+
+
+router = APIRouter()
+
 async def redirect(slug: str, request: Request, db=Depends(get_db)):
     link = crud.get_link_by_slug(db, slug)
+    
     if not link:
         raise HTTPException(status_code=404, detail="Link not found")
 
