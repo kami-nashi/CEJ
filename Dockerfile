@@ -1,18 +1,23 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
+# Install tools you often use for debugging
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
     iputils-ping \
-    procps \
     vim \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# Copy files and install Python dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set environment variable to avoid bytecode generation
+ENV PYTHONUNBUFFERED=1
+
+# Gunicorn command to launch the app
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app.main:app"]
